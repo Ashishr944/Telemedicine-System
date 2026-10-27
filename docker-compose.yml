@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://amrutam:${POSTGRES_PASSWORD:-local_change_me}@postgres:5432/amrutam?schema=public
+      REDIS_URL: redis://redis:6379
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_change_me}
+    ports: ["3000:3000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    command: sh -c "npx prisma migrate deploy && node dist/src/server.js"
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: amrutam
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_change_me}
+      POSTGRES_DB: amrutam
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U amrutam -d amrutam"], interval: 5s, timeout: 3s, retries: 10 }
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 10 }
+volumes:
+  postgres_data:
+  redis_data:

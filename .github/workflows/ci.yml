@@ -1,0 +1,35 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: amrutam, POSTGRES_PASSWORD: test_password, POSTGRES_DB: amrutam }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U amrutam" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    env:
+      DATABASE_URL: postgresql://amrutam:test_password@localhost:5432/amrutam
+      JWT_SECRET: ci-only-secret-value-at-least-32-chars
+      JWT_ISSUER: amrutam-api
+      JWT_AUDIENCE: amrutam-client
+      NODE_ENV: test
+      RUN_DB_INTEGRATION: "1"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - run: docker build -t amrutam-api:${{ github.sha }} .
