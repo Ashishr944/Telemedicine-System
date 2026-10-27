@@ -1,6 +1,6 @@
 # Deploying the API to Vercel
 
-Vercel recognizes `src/server.ts` as the Fastify entry point and runs the application as one Node.js Function. `vercel.json` selects Mumbai (`bom1`) and caps invocation duration at 30 seconds. Keep the PostgreSQL database in the same region where possible. Region selection helps latency; it does not by itself satisfy data-residency, privacy, or healthcare obligations.
+Vercel recognizes `src/server.ts` as the Fastify entry point and runs the application as one Node.js Function. `vercel.json` selects Mumbai (`bom1`); the function duration follows the limit for the linked Vercel plan. Keep the PostgreSQL database in the same region where possible. Region selection helps latency; it does not by itself satisfy data-residency, privacy, or healthcare obligations.
 
 References: [Fastify on Vercel](https://vercel.com/docs/frameworks/backend/fastify), [Vercel Function regions](https://vercel.com/docs/functions/configuring-functions/region), and [Vercel environment variables](https://vercel.com/docs/cli/env).
 
